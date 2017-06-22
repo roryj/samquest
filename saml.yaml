@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: The SAMQUest SAM template
+Resources:
+  ProcessTwitterFeed:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: process_twitter_feed.lambda_handler
+      Runtime: python3.6
+      CodeUri: ./
+      Timeout: 300
+      MemorySize: 512
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSXrayWriteOnlyAccess
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+          - Effect: Allow
+            Action:
+              - kinesis:PutRecord
+              - kinesis:PutRecords
+            Resource: !GetAtt GameStateProcessorStream.Arn
+      Environment:
+        Variables:
+          CONSUMER_KEY: 'test'
+          CONSUMER_SECRET: 'test'
+          ACCESS_TOKEN_KEY: 'test'
+          ACCESS_TOKEN_SECRET: 'test'
+          KINESIS_STREAM: !Ref GameStateProcessorStream
+          TABLE_NAME: !Ref TwitterFeedTable
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+  HandleGameState:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: sam_quest.lambda_handler
+      Runtime: python3.6
+      CodeUri: ./
+      Timeout: 300
+      MemorySize: 512
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSXrayWriteOnlyAccess
+      Environment:
+        Variables:
+          CONSUMER_KEY: 'test'
+          CONSUMER_SECRET: 'test'
+          ACCESS_TOKEN_KEY: 'test'
+          ACCESS_TOKEN_SECRET: 'test'
+          TABLE_NAME: !Ref GameStateTable
+      Events:
+        Timer:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt GameStateProcessorStream.Arn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 5
+  GameStateProcessorStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      ShardCount: 1
+  TwitterFeedTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: TwitterAccount
+          AttributeType: S
+        -
+          AttributeName: TwitterPostId
+          AttributeType: N
+      KeySchema:
+        -
+          AttributeName: TwitterAccount
+          KeyType: HASH
+        -
+          AttributeName: TwitterPostId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+  GameStateTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: TweetStartId
+          AttributeType: N
+        -
+          AttributeName: GameCreator
+          AttributeType: S
+        -
+          AttributeName: CurrentTweetId
+          AttributeType: N
+      KeySchema:
+        -
+          AttributeName: TweetStartId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+      GlobalSecondaryIndexes:
+        -
+          IndexName: 'GameCreator-index'
+          KeySchema:
+          -
+            AttributeName: GameCreator
+            KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 10
+            WriteCapacityUnits: 10
+        -
+          IndexName: 'CurrentTweetId-index'
+          KeySchema:
+          -
+            AttributeName: CurrentTweetId
+            KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 10
+            WriteCapacityUnits: 10

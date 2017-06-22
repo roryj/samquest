@@ -1,0 +1,18 @@
+version: 0.2
+env:
+  variables:
+    "INPUT_FILE": "saml.yaml"
+    "S3_BUCKET": ""
+phases:
+  install:
+    commands:
+      - pip install boto3 -t .
+      - pip install python-twitter -t .
+  build:
+    commands:
+      - aws cloudformation package --template $INPUT_FILE --s3-bucket $S3_BUCKET --output-template post-saml.yaml
+artifacts:
+  files:
+    - post-saml.yaml
+    - beta.json
+  discard-paths: yes
