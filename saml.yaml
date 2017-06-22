@@ -5,7 +5,7 @@ Resources:
   ProcessTwitterFeed:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: process_twitter_feed.lambda_handler
+      Handler: process_twitter_feed_handler.lambda_handler
       Runtime: python3.6
       CodeUri: ./
       Timeout: 300
@@ -36,7 +36,7 @@ Resources:
   HandleGameState:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: sam_quest.lambda_handler
+      Handler: sam_quest_handler.lambda_handler
       Runtime: python3.6
       CodeUri: ./
       Timeout: 300
