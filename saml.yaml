@@ -10,6 +10,7 @@ Resources:
       CodeUri: ./
       Timeout: 300
       MemorySize: 512
+      Tracing: Active
       Policies:
         - AmazonDynamoDBFullAccess
         - AWSXrayWriteOnlyAccess
@@ -41,6 +42,7 @@ Resources:
       CodeUri: ./
       Timeout: 300
       MemorySize: 512
+      Tracing: Active
       Policies:
         - AmazonDynamoDBFullAccess
         - AWSXrayWriteOnlyAccess
