@@ -1,65 +1,10 @@
-import base64
-import json
-import os
-
-import boto3
-import botocore
-import twitter
-from boto3.dynamodb.conditions import Key, Attr
+from boto3.dynamodb.conditions import Key
 import string
 import random
-from time import sleep
 
-from src.game_steps import get_choice, Choice
-from src.models import TwitterGameRequest, RequestType, GameState, GameSession, MockTwitterApi
+from src.game_steps import get_choice
+from src.models import GameRequest, RequestType, GameState, GameSession
 
-# Constants
-ACCESS_TOKEN_KEY = 'ACCESS_TOKEN_KEY'
-ACCESS_TOKEN_SECRET = 'ACCESS_TOKEN_SECRET'
-CONSUMER_KEY = 'CONSUMER_KEY'
-CONSUMER_SECRET = 'CONSUMER_SECRET'
-AWS_REGION = 'AWS_REGION'
-
-total_processed = 0
-
-# Environment Variables
-aws_region = os.environ.get(AWS_REGION, 'us-west-2')
-dynamodb_table_name = os.environ.get('TABLE_NAME', 'test-twitter-table')
-
-# Clients
-dynamodb_table = None
-twitter_api = None
-
-def get_api_credentials():
-    return {
-        'consumer_key': os.getenv('CONSUMER_KEY'),
-        'consumer_secret': os.getenv('CONSUMER_SECRET'),
-        'access_token_key': os.getenv('ACCESS_TOKEN_KEY'),
-        'access_token_secret': os.getenv('ACCESS_TOKEN_SECRET')
-    }
-
-
-def lambda_handler(event, context):
-    global dynamodb_table
-    global twitter_api
-    global total_processed
-
-    if dynamodb_table is None:
-        print('Setting up dynamodb table connection.')
-        dynamodb_table = boto3.resource('dynamodb', region_name=aws_region).Table(dynamodb_table_name)
-
-    if twitter_api is None:
-        print('Setting up twitter client.')
-        twitter_api = twitter.Api(**get_api_credentials())
-
-    posts = [json.loads(base64.b64decode(record['kinesis']['data'])) for record in event['Records']]
-
-    # To avoid twitter throttling/locking, sleep 10 seconds after 10 records have been processed
-    if total_processed % 10 == 0:
-        sleep(10)
-
-    handle_game_state(posts, twitter_api, dynamodb_table)
-    total_processed += len(posts)
 
 def handle_game_state(posts, twitter_api, dynamodb_table):
 
@@ -68,7 +13,7 @@ def handle_game_state(posts, twitter_api, dynamodb_table):
     for post in posts:
 
         print('Processing record ' + str(post))
-        game_request = TwitterGameRequest.NewFromJsonDict(post)
+        game_request = GameRequest.NewFromJsonDict(post)
 
         if RequestType(game_request.request_type) == RequestType.HELP:
             print('Getting help')
@@ -315,8 +260,6 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
            # Check to see if a valid choice was made
             players_choice = [option for option in current_choice.options if option.key in game_request.hashtags]
 
-            print('players choice')
-            print(str(players_choice))
             print('length: ' + str(len(players_choice)))
 
             if len(players_choice) == 0 or len(players_choice) > 1:
@@ -328,7 +271,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
                 # twitter_api.PostUpdate(status=status_message,
                 #                        in_reply_to_status_id=game_request.status_id)
             else:
-                print(players_choice[0].next_id)
+                print("Players choice: {}".format(players_choice[0].next_id))
 
                 next_choice = get_choice(players_choice[0].next_id)
 
@@ -376,123 +319,3 @@ def __send_error_tweet(game_request, twitter_api):
     # twitter_api.PostUpdate(status=status_message,
     #                        in_reply_to_status_id=game_request.status_id)
 
-
-def __get_local_dynamo_table():
-    dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8000")
-    test_table_name = 'sam-quest-game-state'
-
-    try:
-        table = dynamodb.Table(test_table_name)
-        print (table.creation_date_time)
-        return table
-    except botocore.exceptions.ClientError as e:
-        print('Table does not exist, creating table.')
-
-    table = dynamodb.create_table(
-        TableName= test_table_name,
-        KeySchema=[
-            {
-                'AttributeName': 'TweetStartId',
-                'KeyType': 'HASH'  # Partition key
-            }
-        ],
-        AttributeDefinitions=[
-            {
-                'AttributeName': 'TweetStartId',
-                'AttributeType': 'N'
-            },
-            {
-                'AttributeName': 'GameCreator',
-                'AttributeType': 'S'
-            },
-            {
-                'AttributeName': 'CurrentTweetId',
-                'AttributeType': 'N'
-            }
-        ],
-        ProvisionedThroughput={
-            'ReadCapacityUnits': 10,
-            'WriteCapacityUnits': 10
-        },
-        GlobalSecondaryIndexes=[
-            {
-                'IndexName': 'GameCreator-index',
-                'KeySchema': [
-                    {
-                        'AttributeName': 'GameCreator',
-                        'KeyType': 'HASH'
-                    }
-                ],
-                'Projection': {
-                    'ProjectionType': 'ALL'
-                },
-                'ProvisionedThroughput': {
-                    'ReadCapacityUnits': 10,
-                    'WriteCapacityUnits': 10
-                }
-            },
-            {
-                'IndexName': 'CurrentTweetId-index',
-                'KeySchema': [
-                    {
-                        'AttributeName': 'CurrentTweetId',
-                        'KeyType': 'HASH'
-                    }
-                ],
-                'Projection': {
-                    'ProjectionType': 'ALL'
-                },
-                'ProvisionedThroughput': {
-                    'ReadCapacityUnits': 10,
-                    'WriteCapacityUnits': 10
-                }
-            }
-        ]
-    )
-
-    return table
-
-
-if __name__=='__main__':
-    twitter_api = MockTwitterApi()
-    dynamodb_table = __get_local_dynamo_table()
-
-    print(dynamodb_table.attribute_definitions)
-
-    create_tweet = {
-        'user_name': 'rory_jacob',
-        'status_message': 'Hello! Its me! Testing!',
-        'status_id': 1,
-        'in_reply_to_status_id': 2,
-        'request_type': str(RequestType.CREATE_GAME)
-    }
-
-    join_tweet = {
-        'user_name': 'rory_jacob',
-        'status_message': 'Hello! Its me! Testing!',
-        'status_id': 5,
-        'in_reply_to_status_id': 100,
-        'request_type': str(RequestType.JOIN_GAME)
-    }
-
-    start_tweet = {
-        'user_name': 'rory_jacob',
-        'status_message': 'Hello! Its me! Testing!',
-        'status_id': 5,
-        'in_reply_to_status_id': 100,
-        'request_type': str(RequestType.START_GAME)
-    }
-
-    play_tweet = {
-        'user_name': 'rory_jacob',
-        'status_message': 'Hello! Its me! Testing!',
-        'status_id': 5,
-        'in_reply_to_status_id': 100,
-        'request_type': str(RequestType.MAKE_SELECTION),
-        'hashtags': ['ReadNote']
-    }
-
-    handle_game_state([create_tweet, join_tweet, start_tweet, play_tweet], twitter_api, dynamodb_table)
-
-    result = dynamodb_table.scan()
-    print('Result: ' + str(result))

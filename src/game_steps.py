@@ -1,35 +1,4 @@
-from twitter.models import TwitterModel
-
-class Choice(TwitterModel):
-    def __init__(self, **kwargs):
-        self.param_defaults = {
-            'id': None,
-            'text': None,
-            'is_ending': False,
-            'options': []
-        }
-
-        for (param, default) in self.param_defaults.items():
-            if param != 'options':
-                setattr(self, param, kwargs.get(param, default))
-
-        if 'options' in kwargs:
-            self.options = [Option.NewFromJsonDict(x) for x in kwargs.get('options', [])]
-
-    def __str__(self):
-        return self.text
-
-
-class Option(TwitterModel):
-    def __init__(self, **kwargs):
-        self.param_defaults = {
-            'key': None,
-            'next_id': None
-        }
-
-        for (param, default) in self.param_defaults.items():
-            setattr(self, param, kwargs.get(param, default))
-
+from src.models import Choice
 
 SITUATIONS = {
     1: Choice.NewFromJsonDict(
@@ -139,4 +108,3 @@ def get_choice(choice_id):
         return SITUATIONS[choice_id]
     else:
         raise ('This situation doesnt exist!')
-
