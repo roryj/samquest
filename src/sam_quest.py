@@ -247,8 +247,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
     """
     result = dynamodb_table.query(IndexName='CurrentTweetId-index',
                                   Select='ALL_ATTRIBUTES',
-                                  KeyConditionExpression=Key('CurrentTweetId').eq(game_request.in_reply_to_status_id),
-                                  ConsistentRead=True)
+                                  KeyConditionExpression=Key('CurrentTweetId').eq(game_request.in_reply_to_status_id))
 
     # Game does not exist
     if result['Count'] == 0:
