@@ -281,7 +281,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
             print('length: ' + str(len(players_choice)))
 
             if len(players_choice) == 0 or len(players_choice) > 1:
-                status_message = "{} you didnt do a valid response! Try again!".format(
+                status_message = "@{} you didnt do a valid response! Try again!".format(
                     game_request.user_name)
 
                 __send_to_twitter(status_message, game_request.status_id, twitter_api)
