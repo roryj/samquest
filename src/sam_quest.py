@@ -47,7 +47,7 @@ def __send_help(game_request, twitter_api):
     status_message = "@{} Options: #LetsPlay, " \
                      "#StartGame, " \
                      "#JoinGame, " \
-                     "#ChooseMe. Type #Help and command for more info"
+                     "#ChooseMe. Type #Help and command for more info".format(game_request.user_name)
 
     __send_to_twitter(status_message, game_request.in_reply_to_status_id, twitter_api)
     # print('Posting \"' + status_message + '\"')
