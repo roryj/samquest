@@ -271,7 +271,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
             print(game_request.hashtags)
 
            # Check to see if a valid choice was made
-            players_choice = [option for option in current_choice.options if option.key in game_request.hashtags]
+            players_choice = [option for option in current_choice.options if option.key.lower() in game_request.hashtags]
 
             print('length: ' + str(len(players_choice)))
 
