@@ -223,7 +223,7 @@ def __join_game(game_request, dynamodb_table, twitter_api):
             user = game_request.user_name
 
             if user in game_session.Players:
-                status_message = "@{}, you have already joined the game!".format(user)
+                status_message = "@{} You have already joined the game!".format(user)
             else:
                 game_session.Players += [game_request.user_name]
                 dynamodb_table.put_item(Item=game_session.AsDict())
