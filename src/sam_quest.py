@@ -251,7 +251,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
 
     # Game does not exist
     if result['Count'] == 0:
-        status_message = "@{} the game doesnt exist! Start your own by tweeting @ me with #LetsPlay.".format(game_request.user_name)
+        status_message = "@{} the game doesnt exist, or this choice was made already.".format(game_request.user_name)
 
         __send_to_twitter(status_message, game_request.status_id, twitter_api)
         # print('Posting \"' + status_message + '\" to user ' + str(game_request.user_name))
