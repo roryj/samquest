@@ -264,7 +264,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
             #The player is part of the game
             # Check to see if the game is complete
             if GameState(game_session.GameState) == GameState.GAME_COMPLETE:
-                status_message = '@{} the game is over! Try starting a new game.'
+                status_message = '@{} the game is over! Try starting a new game.'.format(game_request.user_name)
                 __send_to_twitter(status_message, game_request.status_id, twitter_api)
                 return
 
