@@ -326,7 +326,7 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
 
 
 def __send_error_tweet(game_request, twitter_api):
-    status_message = "Hello @{}! I could not understand your request!.".format(game_request.user_name)
+    status_message = "Hello @{}! I could not understand your request".format(game_request.user_name)
 
     __send_to_twitter(status_message, game_request.status_id, twitter_api)
     # print('Posting \"' + status_message + '\" to user ' + str(game_request.user_name))
