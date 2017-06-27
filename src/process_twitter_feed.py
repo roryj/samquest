@@ -37,19 +37,19 @@ def process_twitter_feed(twitter_api, kinesis_client, kinesis_stream, dynamo_tab
 
         user = twitter_api.GetUser(user_id=post.user.id)
 
-        hashtags = [tag.text for tag in post.hashtags]
+        hashtags = [tag.text.lower() for tag in post.hashtags]
 
         print(hashtags)
 
-        if 'Help' in hashtags:
+        if 'help' in hashtags:
             request_type = RequestType.HELP
-        elif 'LetsPlay' in hashtags:
+        elif 'letsplay' in hashtags:
             request_type = RequestType.CREATE_GAME
-        elif 'StartGame' in hashtags:
+        elif 'startgame' in hashtags:
             request_type = RequestType.START_GAME
-        elif 'JoinGame' in hashtags:
+        elif 'joingame' in hashtags:
             request_type = RequestType.JOIN_GAME
-        elif 'ChooseMe' in hashtags:
+        elif 'chooseme' in hashtags:
             request_type = RequestType.MAKE_SELECTION
         else:
             request_type = RequestType.UNKNOWN
