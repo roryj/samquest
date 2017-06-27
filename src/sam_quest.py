@@ -182,16 +182,15 @@ def __join_game(game_request, dynamodb_table, twitter_api):
 
     1) Validate this is a started game waiting for users to join
     2) Validate current players count is < 4
-    3) Add user name to set of user aliases
-    4) Reply with tweet
+    3) Check the user has not already joined the game
+    4) Add user name to set of user aliases
+    5) Reply with tweet
 
     :param game_request:
     :param dynamodb_table:
     :param twitter_api
     :return:
     """
-    # result = dynamodb_table.query(Select='ALL_ATTRIBUTES',
-    #                               KeyConditionExpression=Key('TweetStartId').eq(game_request.status_id))
     try:
         result = dynamodb_table.get_item(Key={'TweetStartId': game_request.in_reply_to_status_id})
     except Exception as e:
@@ -207,15 +206,17 @@ def __join_game(game_request, dynamodb_table, twitter_api):
         if len(game_session.Players) == 4:
             status_message = "Hello @{}. The game is full, but you can try starting your own game!".format(game_request.user_name)
         else:
-            game_session.Players += [game_request.user_name]
-            dynamodb_table.put_item(Item=game_session.AsDict())
-            status_message = "Hello @{}. Welcome to the game. Prepare yourself :)".format(game_request.user_name)
+            # The game is not full, but we have to check to see if the user is already in it
+            user = game_request.user_name
+
+            if user in game_session.Players:
+                status_message = "@{}, you have already joined the game!".format(user)
+            else:
+                game_session.Players += [game_request.user_name]
+                dynamodb_table.put_item(Item=game_session.AsDict())
+                status_message = "Hello @{}. Welcome to the game. Prepare yourself :)".format(user)
 
     __send_to_twitter(status_message, game_request.status_id, twitter_api)
-    # print('Posting \"' + status_message + '\" to user ' + str(game_request.user_name))
-    # twitter_api.PostUpdate(status=status_message,
-    #                        in_reply_to_status_id=game_request.status_id)
-
 
 
 def __make_selection(game_request, dynamodb_table, twitter_api):
