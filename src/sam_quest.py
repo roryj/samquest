@@ -4,7 +4,7 @@ import random
 
 from src.game_steps import get_choice
 from src.models import GameRequest, RequestType, GameState, GameSession
-
+from src.constants import HELP_MESSAGE_FORMATS
 
 def handle_game_state(posts, twitter_api, dynamodb_table):
 
@@ -39,15 +39,28 @@ def handle_game_state(posts, twitter_api, dynamodb_table):
 
 def __send_help(game_request, twitter_api):
     """
-    Send a helpful message
+    Send a helpful message.
+    If a user tweets in the pattern "#Help #Command", put a help message specific for that command.
     :param game_request:
     :param twitter_api:
     :return:
     """
-    status_message = "@{} Options: #LetsPlay, " \
-                     "#StartGame, " \
-                     "#JoinGame, " \
-                     "#ChooseMe. Type #Help and command for more info".format(game_request.user_name)
+
+    # Get all hashtags that are not #Help
+    non_help_tags = [tag for tag in game_request.hashtags if tag != 'Help']
+
+    if len(non_help_tags) == 1:
+        tag = non_help_tags[0]
+
+        if tag in HELP_MESSAGE_FORMATS:
+            help_message = HELP_MESSAGE_FORMATS[tag]
+        else:
+            help_message = HELP_MESSAGE_FORMATS['General']
+
+    else:
+        help_message = HELP_MESSAGE_FORMATS['General']
+
+    status_message = "@{} {}".format(game_request.user_name, help_message)
 
     __send_to_twitter(status_message, game_request.in_reply_to_status_id, twitter_api)
     # print('Posting \"' + status_message + '\"')
