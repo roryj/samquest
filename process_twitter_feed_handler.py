@@ -47,7 +47,7 @@ def lambda_handler(event, context):
         print('Processing #{}'.format(processing_count))
         process_twitter_feed(twitter_api, kinesis_client, kinesis_stream, dynamodb_table)
         processing_count += 1
-        sleep(2)
+        sleep(10)
 
     print('Out of time. End of function')
 
