@@ -8,7 +8,7 @@ Resources:
       Handler: process_twitter_feed_handler.lambda_handler
       Runtime: python3.6
       CodeUri: ./
-      Timeout: 300
+      Timeout: 50
       MemorySize: 512
       Tracing: Active
       Policies:
