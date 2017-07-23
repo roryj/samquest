@@ -1,3 +1,5 @@
+from time import sleep
+
 import twitter
 import boto3
 import os
@@ -9,6 +11,7 @@ ACCESS_TOKEN_SECRET = 'ACCESS_TOKEN_SECRET'
 CONSUMER_KEY = 'CONSUMER_KEY'
 CONSUMER_SECRET = 'CONSUMER_SECRET'
 AWS_REGION = 'AWS_REGION'
+MAX_TIME_REMAINING = 5 * 60
 
 # Environment Variables
 aws_region = os.environ.get(AWS_REGION, 'us-west-2')
@@ -35,5 +38,16 @@ kinesis_client = boto3.client('kinesis', region_name=aws_region)
 
 
 def lambda_handler(event, context):
-    process_twitter_feed(twitter_api, kinesis_client, kinesis_stream, dynamodb_table)
+
+    print('Starting processing')
+
+    processing_count = 1
+
+    while context.get_remaining_time_in_millis() > MAX_TIME_REMAINING:
+        print('Processing #{}'.format(processing_count))
+        process_twitter_feed(twitter_api, kinesis_client, kinesis_stream, dynamodb_table)
+        processing_count += 1
+        sleep(2)
+
+    print('Out of time. End of function')
 
