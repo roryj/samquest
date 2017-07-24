@@ -11,7 +11,7 @@ ACCESS_TOKEN_SECRET = 'ACCESS_TOKEN_SECRET'
 CONSUMER_KEY = 'CONSUMER_KEY'
 CONSUMER_SECRET = 'CONSUMER_SECRET'
 AWS_REGION = 'AWS_REGION'
-MAX_TIME_REMAINING = 10.5 * 60
+MAX_TIME_REMAINING = 21000
 
 # Environment Variables
 aws_region = os.environ.get(AWS_REGION, 'us-west-2')
@@ -47,7 +47,7 @@ def lambda_handler(event, context):
         print('Processing #{}'.format(processing_count))
         process_twitter_feed(twitter_api, kinesis_client, kinesis_stream, dynamodb_table)
         processing_count += 1
-        sleep(10)
+        sleep(20)
 
     print('Out of time. End of function')
 
