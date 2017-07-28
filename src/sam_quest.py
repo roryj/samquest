@@ -63,9 +63,6 @@ def __send_help(game_request, twitter_api):
     status_message = "@{} {}".format(game_request.user_name, help_message)
 
     __send_to_twitter(status_message, game_request.in_reply_to_status_id, twitter_api)
-    # print('Posting \"' + status_message + '\"')
-    # twitter_api.PostUpdate(status=status_message,
-    #                        in_reply_to_status_id=game_request.status_id)
 
 def __send_to_twitter(status_message, reply_status_id, twitter_api):
     try:
@@ -104,17 +101,11 @@ def __create_game(game_request, dynamodb_table, twitter_api):
     if result['Count'] > 0 and any([game for game in result['Items'] if game['GameState'] != str(GameState.GAME_COMPLETE)]):
         status_message = "Hello @{}! You already have a game started!".format(user)
         __send_to_twitter(status_message, game_request.status_id, twitter_api)
-        # print('Posting \"' + status_message + '\" to user ' + str(user))
-        # twitter_api.PostUpdate(status=status_message,
-        #                        in_reply_to_status_id=game_request.status_id)
     else:
         status_message = "Welcome to SAMQuest @{}! To start reply with #StartGame. " \
                      "To join this game, reply to this with #JoinGame".format(user)
 
         start_post_status = __send_to_twitter(status_message, game_request.status_id, twitter_api)
-        # print('Posting \"' + status_message + '\" to user ' + str(user))
-        # start_post_status = twitter_api.PostUpdate(status=status_message,
-        #                                 in_reply_to_status_id=game_request.status_id)
 
         if start_post_status != False:
             game_session = GameSession.NewFromJsonDict({
@@ -154,15 +145,9 @@ def __start_game(game_request, dynamodb_table, twitter_api):
     if 'Item' not in result or result['Item'] is None:
         status_message = "You are trying to start a game that doesn't exist @{}!".format(user)
         __send_to_twitter(status_message, game_request.status_id, twitter_api)
-        # print('Posting \"' + status_message + '\" to user ' + str(user))
-        # twitter_api.PostUpdate(status=status_message,
-        #                        in_reply_to_status_id=game_request.status_id)
     elif result['Item']['GameCreator'] != user:
         status_message = "@{} you cannot start someone elses game! Create your own with #LetsPlay".format(user)
         __send_to_twitter(status_message, game_request.status_id, twitter_api)
-        # print('Posting \"' + status_message + '\" to user ' + str(user))
-        # twitter_api.PostUpdate(status=status_message,
-        #                        in_reply_to_status_id=game_request.status_id)
     else:
         game_session = GameSession.NewFromJsonDict(result['Item'])
 
@@ -176,7 +161,6 @@ def __start_game(game_request, dynamodb_table, twitter_api):
         status_message = "{} {} {}".format(users, current_choice.text, choices)
 
         start_post_status = __send_to_twitter(status_message, None, twitter_api)
-        # start_post_status = twitter_api.PostUpdate(status=status_message)
 
         if start_post_status != False:
             game_session.TwitterSteps += [int(start_post_status.id)]
@@ -285,9 +269,6 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
                     game_request.user_name)
 
                 __send_to_twitter(status_message, game_request.status_id, twitter_api)
-                # print('Posting \"' + status_message + '\" to user ' + str(game_request.user_name))
-                # twitter_api.PostUpdate(status=status_message,
-                #                        in_reply_to_status_id=game_request.status_id)
             else:
                 print("Players choice: {}".format(players_choice[0].next_id))
 
@@ -303,8 +284,6 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
                 status_message = "{} {} {}".format(users, next_choice.text, choices)
 
                 start_post_status = __send_to_twitter(status_message, None, twitter_api)
-                # print('Posting \"' + status_message + '\"')
-                # start_post_status = twitter_api.PostUpdate(status=status_message)
 
                 if start_post_status != False:
                     game_session.TwitterSteps += [int(start_post_status.id)]
@@ -323,9 +302,6 @@ def __make_selection(game_request, dynamodb_table, twitter_api):
                 game_request.user_name)
 
             __send_to_twitter(status_message, game_request.status_id, twitter_api)
-            # print('Posting \"' + status_message + '\" to user ' + str(game_request.user_name))
-            # twitter_api.PostUpdate(status=status_message,
-            #                        in_reply_to_status_id=game_request.status_id)
 
 
 
@@ -333,7 +309,4 @@ def __send_error_tweet(game_request, twitter_api):
     status_message = "Hello @{}! I could not understand your request".format(game_request.user_name)
 
     __send_to_twitter(status_message, game_request.status_id, twitter_api)
-    # print('Posting \"' + status_message + '\" to user ' + str(game_request.user_name))
-    # twitter_api.PostUpdate(status=status_message,
-    #                        in_reply_to_status_id=game_request.status_id)
 
