@@ -140,6 +140,7 @@ def __start_game(game_request, dynamodb_table, twitter_api):
     if game_request.in_reply_to_status_id is None:
         status_message = "@{} reply to the original message to start. Or try #CreateGame to create a new one".format(user)
         __send_to_twitter(status_message, game_request.status_id, twitter_api)
+        return
 
     try:
         result = dynamodb_table.get_item(Key={'TweetStartId': game_request.in_reply_to_status_id})
