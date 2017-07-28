@@ -1,6 +1,7 @@
 from boto3.dynamodb.conditions import Key
 import string
 import random
+import time
 
 from src.game_steps import get_choice
 from src.models import GameRequest, RequestType, GameState, GameSession
@@ -113,7 +114,8 @@ def __create_game(game_request, dynamodb_table, twitter_api):
                 'GameState': str(GameState.PENDING_GAME_START),
                 'GameCreator': user,
                 'Players': [user],
-                'TwitterSteps': [int(game_request.status_id)]
+                'TwitterSteps': [int(game_request.status_id)],
+                'CreatedOn': int(time.time())
             })
 
             print(game_session.AsDict())

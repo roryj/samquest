@@ -26,7 +26,8 @@ class GameSession(TwitterModel):
             'CurrentTweetId': None,
             'CurrentVotes': None,
             'CurrentGameStep': None,
-            'TwitterSteps': None
+            'TwitterSteps': None,
+            'CreatedOn': None
         }
 
         for (param, default) in self.param_defaults.items():
