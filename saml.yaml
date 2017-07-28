@@ -127,3 +127,6 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 10
             WriteCapacityUnits: 10
+      TimeToLiveSpecification:
+        AttributeName: ExpirationTime
+        Enabled: true

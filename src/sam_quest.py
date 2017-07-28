@@ -115,7 +115,7 @@ def __create_game(game_request, dynamodb_table, twitter_api):
                 'GameCreator': user,
                 'Players': [user],
                 'TwitterSteps': [int(game_request.status_id)],
-                'CreatedOn': int(time.time())
+                'CreationTime': int(time.time())
             })
 
             print(game_session.AsDict())
