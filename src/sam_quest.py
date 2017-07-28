@@ -109,13 +109,16 @@ def __create_game(game_request, dynamodb_table, twitter_api):
         start_post_status = __send_to_twitter(status_message, game_request.status_id, twitter_api)
 
         if start_post_status != False:
+            current_time = int(time.time())
+
             game_session = GameSession.NewFromJsonDict({
                 'TweetStartId': int(start_post_status.id),
                 'GameState': str(GameState.PENDING_GAME_START),
                 'GameCreator': user,
                 'Players': [user],
                 'TwitterSteps': [int(game_request.status_id)],
-                'CreationTime': int(time.time())
+                'CreationTime': current_time,
+                'ExpirationTime': current_time + (8 * 60 * 60) # set the expiration time for the current time + 8 hours
             })
 
             print(game_session.AsDict())
